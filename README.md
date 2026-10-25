@@ -15,8 +15,10 @@ Image: `ghcr.io/jackdcasey/fluentd-loki`, for `linux/arm64`. It's the official `
 
 ## Labels
 
-- `job`: from the container's log tag, `loki.<job>`. Use a job name without dots.
-- `container_name`: Docker only; nerdctl doesn't send it, so `job` is how you tell nerdctl containers apart
+The container's log tag is `loki.<job>` or `loki.<job>.<container>`, with no dots inside the parts.
+
+- `job`: the tag's second part
+- `container_name`: the tag's third part if given, else the name Docker sends. nerdctl sends none, so give nerdctl containers a three-part tag to tell them apart. nerdctl doesn't expand tag templates like `{{.Name}}`, so write the name out.
 - `source`: `stdout` or `stderr`
 - plus `LOKI_EXTRA_LABELS`
 
@@ -39,10 +41,10 @@ services:
         fluentd-address: "127.0.0.1:24224"
         # Start and keep running even while fluentd is down; lines are buffered and retried
         fluentd-async: "true"
-        tag: "loki.my-app"
+        tag: "loki.my-app"    # or "loki.my-app.web" to also label container_name="web"
 
   fluentd:
-    image: ghcr.io/jackdcasey/fluentd-loki:0.1.1
+    image: ghcr.io/jackdcasey/fluentd-loki:0.2.0
     restart: unless-stopped
     environment:
       - LOKI_URL=${LOKI_URL:?set in .env}
