@@ -1,8 +1,8 @@
 # fluentd-loki
 
-Fluentd with [Grafana's Loki output plugin](https://grafana.com/docs/loki/latest/send-data/fluentd/), configured entirely by env vars, so every service can ship its container logs to Loki through one image.
+A ready-to-run Fluentd that ships Docker container logs to [Grafana Loki](https://grafana.com/oss/loki/), configured entirely by env vars. Point it at a Loki, tag your containers, and their logs show up in Grafana: no Fluentd config to write.
 
-Image: `ghcr.io/jackdcasey/fluentd-loki`, `linux/arm64`. Built from the official `fluent/fluentd` image plus the `fluent-plugin-grafana-loki` gem, because Grafana's own `grafana/fluent-plugin-loki` image is amd64-only.
+Image: `ghcr.io/jackdcasey/fluentd-loki`, for `linux/arm64`. It's the official `fluent/fluentd` image plus [Grafana's Loki output plugin](https://grafana.com/docs/loki/latest/send-data/fluentd/) (`fluent-plugin-grafana-loki`). Grafana's own `grafana/fluent-plugin-loki` image is amd64-only and needs a config file; this one runs on ARM and needs only env vars.
 
 ## Configuration
 
@@ -67,7 +67,7 @@ Only one container per host can publish port 24224. To run several apps on one h
 
 ## Releasing
 
-Push a full semver tag (`v0.1.0`, not `v0.1`); CI builds and pushes the image and creates a GitHub release. New GHCR packages are private: hosts need `docker login ghcr.io`, or make the package public.
+Push a full semver tag (`v0.1.0`, not `v0.1`); CI builds and pushes the image and creates a GitHub release. The `v0.1` form is silently skipped by the tag metadata step.
 
 ## Checking a config change
 

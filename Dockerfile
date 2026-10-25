@@ -1,7 +1,7 @@
 # Fluentd with Grafana's Loki output plugin (https://grafana.com/docs/loki/latest/send-data/fluentd/),
 # configured entirely by env vars so any service can use it. See README.md.
-# Built from the official multi-arch image because grafana/fluent-plugin-loki is amd64-only.
-# The plugin is pure Ruby, so no build tools are needed.
+# Built from the official multi-arch image (grafana/fluent-plugin-loki is amd64-only).
+# The plugin is pure Ruby, so no build tools are needed and the build is the same on every architecture.
 FROM fluent/fluentd:v1.19.4-debian-2.2
 
 USER root
