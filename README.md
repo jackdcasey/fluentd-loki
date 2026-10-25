@@ -1,6 +1,6 @@
 # fluentd-loki
 
-A ready-to-run Fluentd that ships Docker container logs to [Grafana Loki](https://grafana.com/oss/loki/), configured entirely by env vars. Point it at a Loki, tag your containers, and their logs show up in Grafana: no Fluentd config to write.
+A ready-to-run Fluentd that ships container logs (Docker or nerdctl) to [Grafana Loki](https://grafana.com/oss/loki/), configured entirely by env vars. Point it at a Loki, tag your containers, and their logs show up in Grafana: no Fluentd config to write.
 
 Image: `ghcr.io/jackdcasey/fluentd-loki`, for `linux/arm64`. It's the official `fluent/fluentd` image plus [Grafana's Loki output plugin](https://grafana.com/docs/loki/latest/send-data/fluentd/) (`fluent-plugin-grafana-loki`). Grafana's own `grafana/fluent-plugin-loki` image is amd64-only and needs a config file; this one runs on ARM and needs only env vars.
 
@@ -16,13 +16,15 @@ Image: `ghcr.io/jackdcasey/fluentd-loki`, for `linux/arm64`. It's the official `
 ## Labels
 
 - `job`: from the container's log tag, `loki.<job>`. Use a job name without dots.
-- `container_name`
+- `container_name`: Docker only; nerdctl doesn't send it, so `job` is how you tell nerdctl containers apart
 - `source`: `stdout` or `stderr`
 - plus `LOKI_EXTRA_LABELS`
 
 Each line arrives in Loki as the plain log text. Containers whose tag doesn't start with `loki.` are discarded.
 
-## Usage (docker compose)
+## Usage (docker compose or nerdctl compose)
+
+The same compose file works with both. `tag` is required: without it nerdctl sends an empty tag, and the line is discarded.
 
 ```yaml
 services:
@@ -33,14 +35,14 @@ services:
     logging:
       driver: "fluentd"
       options:
-        # Dialled by the Docker daemon on the host, not over the compose network, hence the published port
+        # Dialled from the host (Docker daemon or nerdctl's logger), not over the compose network, hence the published port
         fluentd-address: "127.0.0.1:24224"
         # Start and keep running even while fluentd is down; lines are buffered and retried
         fluentd-async: "true"
         tag: "loki.my-app"
 
   fluentd:
-    image: ghcr.io/jackdcasey/fluentd-loki:0.1.0
+    image: ghcr.io/jackdcasey/fluentd-loki:0.1.1
     restart: unless-stopped
     environment:
       - LOKI_URL=${LOKI_URL:?set in .env}
@@ -56,7 +58,7 @@ services:
         max-file: "3"
 ```
 
-`docker logs` still works on the app: Docker keeps a local copy alongside the remote driver.
+With Docker, `docker logs` still works on the app: Docker keeps a local copy alongside the remote driver. **nerdctl doesn't** ([containerd/nerdctl#1946](https://github.com/containerd/nerdctl/issues/1946)): once a container logs to fluentd, `nerdctl logs` shows nothing for it, and Loki is the place to look.
 
 Only one container per host can publish port 24224. To run several apps on one host, run this once per host and point every app's `fluentd-address` at it; the `loki.<job>` tag keeps them apart.
 
